@@ -147,13 +147,13 @@ namespace RenameMod
                     Log("type in: rnm setgunname gun_id new_gun_name, to rename a gun (UNDERSCORES REQUIRED FOR SPACES)");
 					Log("this also works with things like descriptions");
                 });
-                //ETGModConsole.Commands.GetGroup("rnm").AddUnit("setitemname", new Action<string[]>(this.RenameItem), Module.GiveAutocompletionSettings);
                 ETGModConsole.Commands.GetGroup("rnm").AddUnit("setitemname", new Action<string[]>(this.RenameItem), Module.GiveAutocompletionSettings);
                 ETGModConsole.Commands.GetGroup("rnm").AddUnit("setgunname", new Action<string[]>(this.renameGun), Module.GiveAutocompletionSettings);
                 ETGModConsole.Commands.GetGroup("rnm").AddUnit("setitemshortdesc", new Action<string[]>(this.SetItemShortDesc), Module.GiveAutocompletionSettings);
                 ETGModConsole.Commands.GetGroup("rnm").AddUnit("setgunshortdesc", new Action<string[]>(this.SetGunShortDesc), Module.GiveAutocompletionSettings);
                 ETGModConsole.Commands.GetGroup("rnm").AddUnit("setitemlongdesc", new Action<string[]>(this.SetItemLongDesc), Module.GiveAutocompletionSettings);
                 ETGModConsole.Commands.GetGroup("rnm").AddUnit("setgunlongdesc", new Action<string[]>(this.SetGunLongDesc), Module.GiveAutocompletionSettings);
+				//ETGModConsole.Commands.GetGroup("rnm").AddUnit("cleargunname", new Action<string[]>(this.cleargunname), Module.GiveAutocompletionSettings);
 
 				LoadRenames();
 			}
@@ -293,21 +293,28 @@ namespace RenameMod
 						Log("At least 2 arguments required.");
 					}
 					
-					
 					string name = args[1];
 					TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
 					PickupObject pickupObject = Game.Items[text];
 					Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
-					name = textInfo.ToTitleCase(name.ToLower().Replace("_", " ") );
-					gun.SetName(name);
-					Log($"{text}'s name is now " + name);
-
+						name = textInfo.ToTitleCase(name.ToLower().Replace("_", " "));
+						gun.SetName(name);
+						Log($"{text}'s name is now " + name);
 					ItemNames.Add(pickupObject.name, name);
 
 					using (StreamWriter file = new StreamWriter(NameFilePath, true))
 					{
+						if (gun.PickupObjectId > 823 || gun.PickupObjectId < 0)
+						{
+							file.WriteLine(name);
+							string itemname = $"{gun}".Split('(')[0];
+							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
+						}
+						else
+						{
 							file.WriteLine(name);
 							file.WriteLine($"{gun}".Split(' ')[0]);
+						}
 					}
 
 				}
@@ -353,7 +360,8 @@ namespace RenameMod
 						if (item.PickupObjectId > 823 || item.PickupObjectId < 0)
 						{
 							file.WriteLine(name);
-							file.WriteLine($"{text}");
+							string itemname = $"{item}".Split('(')[0];
+							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
 						}
 						else
 						{
@@ -403,8 +411,17 @@ namespace RenameMod
 					Log($"{text}'s short description is now " + name);
 					using (StreamWriter file = new StreamWriter(ShortDescPath, true))
 					{
-						file.WriteLine(name);
-						file.WriteLine($"{item}".Split(' ')[0]);
+						if (item.PickupObjectId > 823 || item.PickupObjectId < 0)
+						{
+							file.WriteLine(name);
+							string itemname = $"{item}".Split('(')[0];
+							file.WriteLine(itemname.Split('(')[0].Substring(0, itemname.Length - 1));
+						}
+						else
+						{
+							file.WriteLine(name);
+							file.WriteLine($"{item}".Split(' ')[0]);
+						}
 					}
 				}
 			}
@@ -443,13 +460,22 @@ namespace RenameMod
 					TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
 					PickupObject pickupObject = Game.Items[text];
 					Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
-					name = textInfo.ToTitleCase(name.ToLower().Replace("_", " "));
-					gun.SetShortDescription(name);
-					Log($"{text}'s short description is now " + name);
+						name = textInfo.ToTitleCase(name.ToLower().Replace("_", " "));
+						gun.SetShortDescription(name);
+						Log($"{text}'s short description is now " + name);
 					using (StreamWriter file = new StreamWriter(ShortDescPath, true))
 					{
-						file.WriteLine(name);
-						file.WriteLine($"{gun}".Split(' ')[0]);
+						if (gun.PickupObjectId > 823 || gun.PickupObjectId < 0)
+						{
+							file.WriteLine(name);
+							string itemname = $"{gun}".Split('(')[0];
+							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
+						}
+						else
+						{
+							file.WriteLine(name);
+							file.WriteLine($"{gun}".Split(' ')[0]);
+						}
 					}
 				}
 			}
@@ -492,8 +518,17 @@ namespace RenameMod
 					Log($"{text}'s long description is now " + name);
 					using (StreamWriter file = new StreamWriter(LongDescPath, true))
 					{
-						file.WriteLine(name);
-						file.WriteLine($"{item}".Split(' ')[0]);
+						if (item.PickupObjectId > 823 || item.PickupObjectId < 0)
+						{
+							file.WriteLine(name);
+							string itemname = $"{item}".Split('(')[0];
+							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
+						}
+						else
+						{
+							file.WriteLine(name);
+							file.WriteLine($"{item}".Split(' ')[0]);
+						}
 					}
 				}
 			}
@@ -531,14 +566,23 @@ namespace RenameMod
 
 					string name = args[1];
 					PickupObject pickupObject = Game.Items[text];
-					Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
-					name = name.ToLower().Replace("_", " ");
-					gun.SetLongDescription(name.CapitalizeFirst());
-					Log($"{text}'s long description is now " + name);
+					    Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
+						name = name.ToLower().Replace("_", " ");
+						gun.SetLongDescription(name.CapitalizeFirst());
+						Log($"{text}'s long description is now " + name);
 					using (StreamWriter file = new StreamWriter(LongDescPath, true))
 					{
-						file.WriteLine(name);
-						file.WriteLine($"{gun}".Split(' ')[0]);
+						if (gun.PickupObjectId > 823 || gun.PickupObjectId < 0)
+						{
+							file.WriteLine(name);
+							string itemname = $"{gun}".Split('(')[0];
+							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
+						}
+						else
+						{
+							file.WriteLine(name);
+							file.WriteLine($"{gun}".Split(' ')[0]);
+						}
 					}
 				}
 			}
