@@ -20,7 +20,7 @@ namespace RenameMod
 		public static string longdescfile = "CustomItemLongDesc.json";
 
 
-		public static string RenameDirectory = Path.Combine(ETGMod.ResourcesDirectory, "CustomRenames/");
+		public static string RenameDirectory = "CustomRenames/";
 		public static string NameFilePath = Path.Combine(Module.RenameDirectory, "CustomItemNames.json");
 		public static string ShortDescPath = Path.Combine(Module.RenameDirectory, "CustomItemShortDesc.json");
 		public static string LongDescPath = Path.Combine(Module.RenameDirectory, "CustomItemLongDesc.json");
@@ -143,8 +143,8 @@ namespace RenameMod
                 });
                 ETGModConsole.Commands.GetGroup("rnm").AddUnit("help", delegate (string[] args)
                 {
-                    Log("type in: rnm setitemname item_id new_item_name, to rename an item (UNDERSCORES REQUIRED FOR SPACES)");
-                    Log("type in: rnm setgunname gun_id new_gun_name, to rename a gun (UNDERSCORES REQUIRED FOR SPACES)");
+                    Log("type in: rnm setitemname item_id new item name, to rename an item");
+                    Log("type in: rnm setgunname gun_id new gun name, to rename a gun");
 					Log("this also works with things like descriptions");
                 });
                 ETGModConsole.Commands.GetGroup("rnm").AddUnit("setitemname", new Action<string[]>(this.RenameItem), Module.GiveAutocompletionSettings);
@@ -265,7 +265,7 @@ namespace RenameMod
 		}
 		private void renameGun(string[] args)
 		{
-			bool flag = !Module.ArgCount(args, 2, 2);
+			bool flag = !Module.ArgCount(args, 2, 99999);
 			if (!flag)
 			{
 
@@ -292,29 +292,29 @@ namespace RenameMod
 					{
 						Log("At least 2 arguments required.");
 					}
-					
-					string name = args[1];
+					string name = string.Empty;
+					List<string> nameSetter = new List<string>();
+					string[] nameSetter2 = new string[] { };
+					// WHY DO I NEED SO MANY FUCKING NAME SETTERS;
+					IEnumerable<int> words = Enumerable.Range(1, args.Length - 1);
+					foreach (int num in words)
+					{
+						nameSetter.Add(args[num]);
+						nameSetter2 = nameSetter.ToArray();
+					}
+					name = string.Join(" ", nameSetter2);
 					TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
 					PickupObject pickupObject = Game.Items[text];
 					Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
-						name = textInfo.ToTitleCase(name.ToLower().Replace("_", " "));
 						gun.SetName(name);
 						Log($"{text}'s name is now " + name);
 					ItemNames.Add(pickupObject.name, name);
 
 					using (StreamWriter file = new StreamWriter(NameFilePath, true))
 					{
-						if (gun.PickupObjectId > 823 || gun.PickupObjectId < 0)
-						{
 							file.WriteLine(name);
 							string itemname = $"{gun}".Split('(')[0];
 							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
-						}
-						else
-						{
-							file.WriteLine(name);
-							file.WriteLine($"{gun}".Split(' ')[0]);
-						}
 					}
 
 				}
@@ -323,7 +323,7 @@ namespace RenameMod
 
 		private void RenameItem(string[] args)
 		{
-			bool flag = !Module.ArgCount(args, 2, 2);
+			bool flag = !Module.ArgCount(args, 2, 99999);
 			if (!flag)
 			{
 				string text = args[0];
@@ -348,33 +348,34 @@ namespace RenameMod
 					{
 						Log("At least 2 arguments required.");
 					}
-					string name = args[1];
+					string name = string.Empty;
+					List<string> nameSetter = new List<string>();
+					string[] nameSetter2 = new string[] { };
+					// WHY DO I NEED SO MANY FUCKING NAME SETTERS;
+					IEnumerable<int> words = Enumerable.Range(1, args.Length - 1);
+					foreach (int num in words)
+					{
+						nameSetter.Add(args[num]);
+						nameSetter2 = nameSetter.ToArray();
+					}
+					name = string.Join(" ", nameSetter2);
 					TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
 					PickupObject pickupObject = Game.Items[text];
 					PickupObject item = PickupObjectDatabase.GetByName(pickupObject.name);
-					name = textInfo.ToTitleCase(name.ToLower().Replace("_", " "));
 					item.SetName(name);
 					Log($"{text}'s name is now " + name);
 					using (StreamWriter file = new StreamWriter(NameFilePath, true))
 					{
-						if (item.PickupObjectId > 823 || item.PickupObjectId < 0)
-						{
 							file.WriteLine(name);
 							string itemname = $"{item}".Split('(')[0];
 							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
-						}
-						else
-						{
-							file.WriteLine(name);
-							file.WriteLine($"{item}".Split(' ')[0]);
-						}
 					}
 				}
 			}
 		}
 		private void SetItemShortDesc(string[] args)
 		{
-			bool flag = !Module.ArgCount(args, 2, 2);
+			bool flag = !Module.ArgCount(args, 2, 99999);
 			if (!flag)
 			{
 
@@ -400,35 +401,34 @@ namespace RenameMod
 					{
 						Log("At least 2 arguments required.");
 					}
-
-
-					string name = args[1];
+					string name = string.Empty;
+					List<string> nameSetter = new List<string>();
+					string[] nameSetter2 = new string[] { };
+					// WHY DO I NEED SO MANY FUCKING NAME SETTERS;
+					IEnumerable<int> words = Enumerable.Range(1, args.Length - 1);
+					foreach (int num in words)
+					{
+						nameSetter.Add(args[num]);
+						nameSetter2 = nameSetter.ToArray();
+					}
+					name = string.Join(" ", nameSetter2);
 					TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
 					PickupObject pickupObject = Game.Items[text];
 					PickupObject item = PickupObjectDatabase.GetByName(pickupObject.name);
-					name = textInfo.ToTitleCase(name.ToLower().Replace("_", " "));
 					item.SetShortDescription(name);
 					Log($"{text}'s short description is now " + name);
 					using (StreamWriter file = new StreamWriter(ShortDescPath, true))
 					{
-						if (item.PickupObjectId > 823 || item.PickupObjectId < 0)
-						{
 							file.WriteLine(name);
 							string itemname = $"{item}".Split('(')[0];
 							file.WriteLine(itemname.Split('(')[0].Substring(0, itemname.Length - 1));
-						}
-						else
-						{
-							file.WriteLine(name);
-							file.WriteLine($"{item}".Split(' ')[0]);
-						}
 					}
 				}
 			}
 		}
 		private void SetGunShortDesc(string[] args)
 		{
-			bool flag = !Module.ArgCount(args, 2, 2);
+			bool flag = !Module.ArgCount(args, 2, 99999);
 			if (!flag)
 			{
 
@@ -454,35 +454,34 @@ namespace RenameMod
 					{
 						Log("At least 2 arguments required.");
 					}
-
-
-					string name = args[1];
+					string name = string.Empty;
+					List<string> nameSetter = new List<string>();
+					string[] nameSetter2 = new string[] { };
+					// WHY DO I NEED SO MANY FUCKING NAME SETTERS;
+					IEnumerable<int> words = Enumerable.Range(1, args.Length - 1);
+					foreach (int num in words)
+					{
+						nameSetter.Add(args[num]);
+						nameSetter2 = nameSetter.ToArray();
+					}
+					name = string.Join(" ", nameSetter2);
 					TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
 					PickupObject pickupObject = Game.Items[text];
 					Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
-						name = textInfo.ToTitleCase(name.ToLower().Replace("_", " "));
 						gun.SetShortDescription(name);
 						Log($"{text}'s short description is now " + name);
 					using (StreamWriter file = new StreamWriter(ShortDescPath, true))
 					{
-						if (gun.PickupObjectId > 823 || gun.PickupObjectId < 0)
-						{
 							file.WriteLine(name);
 							string itemname = $"{gun}".Split('(')[0];
 							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
-						}
-						else
-						{
-							file.WriteLine(name);
-							file.WriteLine($"{gun}".Split(' ')[0]);
-						}
 					}
 				}
 			}
 		}
 		private void SetItemLongDesc(string[] args)
 		{
-			bool flag = !Module.ArgCount(args, 2, 2);
+			bool flag = !Module.ArgCount(args, 2, 99999);
 			if (!flag)
 			{
 
@@ -508,27 +507,27 @@ namespace RenameMod
 					{
 						Log("At least 2 arguments required.");
 					}
-
-
-					string name = args[1];
+					
+					string name = string.Empty;
+					List<string> nameSetter = new List<string>();
+					string[] nameSetter2 = new string[] { };
+					// WHY DO I NEED SO MANY FUCKING NAME SETTERS;
+					IEnumerable<int> words = Enumerable.Range(1, args.Length - 1);
+					foreach (int num in words)
+					{
+						nameSetter.Add(args[num]);
+						nameSetter2 = nameSetter.ToArray();
+					}
+					name = string.Join(" ", nameSetter2);
 					PickupObject pickupObject = Game.Items[text];
 					PickupObject item = PickupObjectDatabase.GetByName(pickupObject.name);
-					name = name.ToLower().Replace("_", " ");
 					item.SetLongDescription(name.CapitalizeFirst());
 					Log($"{text}'s long description is now " + name);
 					using (StreamWriter file = new StreamWriter(LongDescPath, true))
 					{
-						if (item.PickupObjectId > 823 || item.PickupObjectId < 0)
-						{
 							file.WriteLine(name);
 							string itemname = $"{item}".Split('(')[0];
 							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
-						}
-						else
-						{
-							file.WriteLine(name);
-							file.WriteLine($"{item}".Split(' ')[0]);
-						}
 					}
 				}
 			}
@@ -536,7 +535,7 @@ namespace RenameMod
 
 		private void SetGunLongDesc(string[] args)
 		{
-			bool flag = !Module.ArgCount(args, 2, 2);
+			bool flag = !Module.ArgCount(args, 2, 99999);
 			if (!flag)
 			{
 
@@ -563,30 +562,87 @@ namespace RenameMod
 						Log("At least 2 arguments required.");
 					}
 
+					string name = string.Empty;
+					List<string> nameSetter = new List<string>();
+					string[] nameSetter2 = new string[] { };
+					// WHY DO I NEED SO MANY FUCKING NAME SETTERS;
+					IEnumerable<int> words = Enumerable.Range(1, args.Length - 1);
+					foreach (int num in words)
+					{
+						nameSetter.Add(args[num]);
+						nameSetter2 = nameSetter.ToArray();
+					}
+					name = string.Join(" ", nameSetter2);
 
-					string name = args[1];
 					PickupObject pickupObject = Game.Items[text];
 					    Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
-						name = name.ToLower().Replace("_", " ");
 						gun.SetLongDescription(name.CapitalizeFirst());
 						Log($"{text}'s long description is now " + name);
 					using (StreamWriter file = new StreamWriter(LongDescPath, true))
 					{
-						if (gun.PickupObjectId > 823 || gun.PickupObjectId < 0)
-						{
 							file.WriteLine(name);
 							string itemname = $"{gun}".Split('(')[0];
 							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
-						}
-						else
-						{
-							file.WriteLine(name);
-							file.WriteLine($"{gun}".Split(' ')[0]);
-						}
 					}
 				}
 			}
 		}
+
+		
+			//private void cleargunname(string[] args)
+	   //{
+			//      bool flag = !Module.ArgCount(args, 2, 99999);
+			//if (!flag)
+			//{
+
+			//	string text = args[0];
+			//	bool flag3 = !Game.Items.ContainsID(text);
+			//	if (flag3)
+			//	{
+			//		ETGModConsole.Log(string.Format("Invalid item ID {0}!", text), false);
+			//	}
+			//	else
+			//	{
+			//		ETGModConsole.Log(string.Concat(new object[]
+			//		{
+			//				"Attempting to remove gun name",
+			//				args[0],
+			//				" (numeric ",
+			//				text,
+			//				"), class ",
+			//				Game.Items.Get(text).GetType()
+			//		}), false);
+			//		bool flag4 = args.Length < 2;
+			//		if (flag4)
+			//		{
+			//			Log("At least 2 arguments required.");
+			//		}
+
+			//		string name = string.Empty;
+			//		List<string> nameSetter = new List<string>();
+			//		string[] nameSetter2 = new string[] { };
+			//		// WHY DO I NEED SO MANY FUCKING NAME SETTERS;
+			//		IEnumerable<int> words = Enumerable.Range(1, args.Length - 1);
+			//		foreach (int num in words)
+			//		{
+			//			nameSetter.Add(args[num]);
+			//			nameSetter2 = nameSetter.ToArray();
+			//		}
+			//		name = string.Join(" ", nameSetter2);
+
+			//		PickupObject pickupObject = Game.Items[text];
+			//		Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
+			//		gun.SetLongDescription(name.CapitalizeFirst());
+			//		Log($"{text}'s long description is now " + name);
+			//		using (StreamWriter file = new StreamWriter(LongDescPath, true))
+			//		{
+			//				file.WriteLine(name);
+			//				string itemname = $"{gun}".Split('(')[0];
+			//				file.WriteLine(itemname.Substring(0, itemname.Length - 1));
+			//		}
+			//	}
+			//}
+		//}
 		public static bool ArgCount(string[] args, int min, int max)
 		{
 			bool flag = args.Length >= min && args.Length <= max;
@@ -629,7 +685,7 @@ namespace RenameMod
 		protected static AutocompletionSettings AutocompletionSettings;
 	}
 
-	public static class StringExtension
+		public static class StringExtension
 	{
 		public static string CapitalizeFirst(this string s)
 		{
