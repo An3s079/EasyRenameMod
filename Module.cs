@@ -9,12 +9,12 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using System.Globalization;
-using UnityEngine;
 
 namespace RenameMod
 {
-    public class Module : ETGModule
-    {
+	public class Module : ETGModule
+	{
+		public static ETGModuleMetadata metadata;
 		public static string namefile = "CustomItemNames.json";
 		public static string shortdescfile = "CustomItemShortDesc.json";
 		public static string longdescfile = "CustomItemLongDesc.json";
@@ -25,23 +25,23 @@ namespace RenameMod
 		public static string ShortDescPath = Path.Combine(Module.RenameDirectory, "CustomItemShortDesc.json");
 		public static string LongDescPath = Path.Combine(Module.RenameDirectory, "CustomItemLongDesc.json");
 
-		Dictionary<string, string> ItemNames = new Dictionary<string, string>();
-		Dictionary<string, string> ItemShortDesc = new Dictionary<string, string>();
-		Dictionary<string, string> ItemLongDesc = new Dictionary<string, string>();
-
-
 		public static readonly string MOD_NAME = "Item Rename Mod";
-        public static readonly string VERSION = "1.0.0";
-        public static readonly string TEXT_COLOR = "#00FFFF";
+		public static readonly string VERSION = "1.0.0";
+		public static readonly string TEXT_COLOR = "#00FFFF";
 
-        public override void Start()
-        {
-            try
-            {
-                //global::ETGMod.GameFolder = Path.Combine(Application.dataPath, "..");
-                if (!Directory.Exists(Module.RenameDirectory))
-                {
-                    Directory.CreateDirectory(RenameDirectory);
+		JObject nameJson = new JObject();
+		JObject ShortDescJson = new JObject();
+		JObject LongDescJson = new JObject();
+
+		public override void Start()
+		{
+			try
+			{
+				metadata = this.Metadata;
+				//global::ETGMod.GameFolder = Path.Combine(Application.dataPath, "..");
+				if (!Directory.Exists(Module.RenameDirectory))
+				{
+					Directory.CreateDirectory(RenameDirectory);
 
 					ETGModConsole.Log("Rename: Unable to find existing (NameFilePath) config, making a new one!", false);
 					File.Create(NameFilePath).Close();
@@ -51,134 +51,175 @@ namespace RenameMod
 
 					ETGModConsole.Log("Rename: Unable to find existing (LongDescPath) config, making a new one!", false);
 					File.Create(LongDescPath).Close();
-
 				}
 
 
-                if (!File.Exists(NameFilePath))
-                {
-                    ETGModConsole.Log("Rename: Unable to find existing (NameFilePath) config, making a new one!", false);
-                    File.Create(NameFilePath).Close();
-                }
+				if (!File.Exists(NameFilePath))
+				{
+					ETGModConsole.Log("Rename: Unable to find existing (NameFilePath) config, making a new one!", false);
+					File.Create(NameFilePath).Close();
+				}
 
-                if (!File.Exists(ShortDescPath))
-                {
+				if (!File.Exists(ShortDescPath))
+				{
 					ETGModConsole.Log("Rename: Unable to find existing (ShortDesc) config, making a new one!", false);
 					//Directory.CreateDirectory(RenameDirectory);
 					File.Create(ShortDescPath).Close();
 				}
 
-                if (!File.Exists(LongDescPath))
-                {
-                    ETGModConsole.Log("Rename: Unable to find existing (LongDescPath) config, making a new one!", false);
-                    //Directory.CreateDirectory(RenameDirectory);
-                    File.Create(LongDescPath).Close();
-                }
+				if (!File.Exists(LongDescPath))
+				{
+					ETGModConsole.Log("Rename: Unable to find existing (LongDescPath) config, making a new one!", false);
+					//Directory.CreateDirectory(RenameDirectory);
+					File.Create(LongDescPath).Close();
+				}
+
 				if (File.Exists(NameFilePath))
 				{
-					var res = File.ReadAllLines(NameFilePath).Select((v, i) => new { Index = i, Value = v }).GroupBy(p => p.Index / 2).ToDictionary(g => g.First().Value, g => g.Last().Value);
-					for (int index = 0; index < res.Count; index++)
+					if (new FileInfo(NameFilePath).Length > 0)
 					{
-						ETGModConsole.Log($"{res.ElementAt(index).Value}'s name is now: {res.ElementAt(index).Key}");
-						
-						Gun gun = PickupObjectDatabase.GetByName(res.ElementAt(index).Value) as Gun;		
-						var thing = PickupObjectDatabase.GetByName(res.ElementAt(index).Value);
+						var output = File.ReadAllText(NameFilePath);
+						JObject o = JObject.Parse(output);
 
-                        if (thing is Gun && thing != null)
-                        {
-                            thing.SetName(res.ElementAt(index).Key);
-                        }
-						else if (thing != null)
-                        {
-                            thing.SetName(res.ElementAt(index).Key);
-                        }
-                    }
-				}
-				if(File.Exists(ShortDescPath))
-                {
-					var res = File.ReadAllLines(ShortDescPath).Select((v, I) => new { Index = I, Value = v }).GroupBy(p => p.Index / 2).ToDictionary(g => g.First().Value, g => g.Last().Value);
-					for (int index = 0; index < res.Count; index++)
-					{
-						ETGModConsole.Log($"{res.ElementAt(index).Value}'s short description is now: {res.ElementAt(index).Key}");
-
-						Gun gun = PickupObjectDatabase.GetByName(res.ElementAt(index).Value) as Gun;
-						var thing = PickupObjectDatabase.GetByName(res.ElementAt(index).Value);
-
-						if (thing is Gun && thing != null)
+						foreach (var pair in o)
 						{
-							thing.SetShortDescription(res.ElementAt(index).Key);
-						}
-						else if (thing != null)
-						{
-							thing.SetShortDescription(res.ElementAt(index).Key);
+							ETGModConsole.Log($"{pair.Key}'s name is now: {pair.Value}");
+
+							Gun gun = PickupObjectDatabase.GetByName(pair.Key.ToString()) as Gun;
+							var thing = PickupObjectDatabase.GetByName(pair.Key.ToString());
+
+							if (thing is Gun && thing != null)
+							{
+								thing.SetName(pair.Value.ToString());
+							}
+							else if (thing != null)
+							{
+								thing.SetName(pair.Value.ToString());
+							}
 						}
 					}
 				}
-				
+				if (File.Exists(ShortDescPath))
+				{
+					
+					if (new FileInfo(ShortDescPath).Length > 0)
+					{
+						var output = File.ReadAllText(ShortDescPath);
+						JObject o = JObject.Parse(output);
+
+						foreach (var pair in o)
+						{
+							ETGModConsole.Log($"{pair.Key}'s name is now: {pair.Value}");
+
+							Gun gun = PickupObjectDatabase.GetByName(pair.Key.ToString()) as Gun;
+							var thing = PickupObjectDatabase.GetByName(pair.Key.ToString());
+
+							if (thing is Gun && thing != null)
+							{
+								thing.SetShortDescription(pair.Value.ToString());
+							}
+							else if (thing != null)
+							{
+								thing.SetShortDescription(pair.Value.ToString());
+							}
+						}
+					}
+				}
+
 				if (File.Exists(LongDescPath))
 				{
-					var res = File.ReadAllLines(LongDescPath).Select((v, I) => new { Index = I, Value = v }).GroupBy(p => p.Index / 2).ToDictionary(g => g.First().Value, g => g.Last().Value);
-					for (int index = 0; index < res.Count; index++)
+					
+					if (new FileInfo(LongDescPath).Length > 0)
 					{
-						ETGModConsole.Log($"{res.ElementAt(index).Value}'s long description is now: {res.ElementAt(index).Key}");
-
-						Gun gun = PickupObjectDatabase.GetByName(res.ElementAt(index).Value) as Gun;
-						var thing = PickupObjectDatabase.GetByName(res.ElementAt(index).Value);
-
-						if (thing is Gun && thing != null)
+						var output = File.ReadAllText(LongDescPath);
+						JObject o = JObject.Parse(output);
+						foreach (var pair in o)
 						{
-							thing.SetLongDescription(res.ElementAt(index).Key.CapitalizeFirst());
-						}
-						else if (thing != null)
-						{
-							thing.SetLongDescription(res.ElementAt(index).Key.CapitalizeFirst());
+							ETGModConsole.Log($"{pair.Key}'s name is now: {pair.Value}");
+
+							Gun gun = PickupObjectDatabase.GetByName(pair.Key.ToString()) as Gun;
+							var thing = PickupObjectDatabase.GetByName(pair.Key.ToString());
+
+							if (thing is Gun && thing != null)
+							{
+								thing.SetLongDescription(pair.Value.ToString());
+							}
+							else if (thing != null)
+							{
+								thing.SetLongDescription(pair.Value.ToString());
+							}
 						}
 					}
+
+					
 				}
+
 				ETGModConsole.Commands.AddGroup("rnm", delegate (string[] args)
-                {
-                    ETGModConsole.Log("<size=100><color=#ff0000ff>Rename Mod V1 by An3s & N0tAB0t</color></size>", false);
-                    ETGModConsole.Log("<size=100><color=#ff0000ff>--------------------------------</color></size>", false);
-                    ETGModConsole.Log("Use \"rnm help\" for help!", false);
-                });
-                ETGModConsole.Commands.GetGroup("rnm").AddUnit("help", delegate (string[] args)
-                {
-                    Log("type in: rnm setitemname item_id new item name, to rename an item");
-                    Log("type in: rnm setgunname gun_id new gun name, to rename a gun");
+				{
+					ETGModConsole.Log("<size=100><color=#ff0000ff>Rename Mod V1 by An3s & N0tAB0t</color></size>", false);
+					ETGModConsole.Log("<size=100><color=#ff0000ff>--------------------------------</color></size>", false);
+					ETGModConsole.Log("Use \"rnm help\" for help!", false);
+				});
+				ETGModConsole.Commands.GetGroup("rnm").AddUnit("help", delegate (string[] args)
+				{
+					Log("type in: rnm setname gun_id new gun name, to rename an item");
 					Log("this also works with things like descriptions");
-                });
-                ETGModConsole.Commands.GetGroup("rnm").AddUnit("setitemname", new Action<string[]>(this.RenameItem), Module.GiveAutocompletionSettings);
-                ETGModConsole.Commands.GetGroup("rnm").AddUnit("setgunname", new Action<string[]>(this.renameGun), Module.GiveAutocompletionSettings);
-                ETGModConsole.Commands.GetGroup("rnm").AddUnit("setitemshortdesc", new Action<string[]>(this.SetItemShortDesc), Module.GiveAutocompletionSettings);
-                ETGModConsole.Commands.GetGroup("rnm").AddUnit("setgunshortdesc", new Action<string[]>(this.SetGunShortDesc), Module.GiveAutocompletionSettings);
-                ETGModConsole.Commands.GetGroup("rnm").AddUnit("setitemlongdesc", new Action<string[]>(this.SetItemLongDesc), Module.GiveAutocompletionSettings);
-                ETGModConsole.Commands.GetGroup("rnm").AddUnit("setgunlongdesc", new Action<string[]>(this.SetGunLongDesc), Module.GiveAutocompletionSettings);
-				//ETGModConsole.Commands.GetGroup("rnm").AddUnit("cleargunname", new Action<string[]>(this.cleargunname), Module.GiveAutocompletionSettings);
+				});
+
+
+				ETGModConsole.Commands.GetGroup("rnm").AddUnit("setname", new Action<string[]>(this.RenameItem), Module.GiveAutocompletionSettings);
+				ETGModConsole.Commands.GetGroup("rnm").AddUnit("setshortdesc", new Action<string[]>(this.SetItemShortDesc), Module.GiveAutocompletionSettings);
+				ETGModConsole.Commands.GetGroup("rnm").AddUnit("setlongdesc", new Action<string[]>(this.SetItemLongDesc), Module.GiveAutocompletionSettings);
+				ETGModConsole.Commands.GetGroup("rnm").AddUnit("clearname", new Action<string[]>(this.clearname), Module.GiveAutocompletionSettings);
+				ETGModConsole.Commands.GetGroup("rnm").AddUnit("clearshortdesc", new Action<string[]>(this.clearShortDesc), Module.GiveAutocompletionSettings);
+				ETGModConsole.Commands.GetGroup("rnm").AddUnit("clearlongdesc", new Action<string[]>(this.clearLongDesc), Module.GiveAutocompletionSettings);
+
+				if (new FileInfo(NameFilePath).Length > 0)
+					nameJson = JObject.Parse(File.ReadAllText(NameFilePath));
+				if (new FileInfo(ShortDescPath).Length > 0)
+					ShortDescJson = JObject.Parse(File.ReadAllText(ShortDescPath));
+				if (new FileInfo(LongDescPath).Length > 0)
+					LongDescJson = JObject.Parse(File.ReadAllText(LongDescPath));
+
 
 				LoadRenames();
 			}
-            catch (Exception e)
-            {
-                ETGModConsole.Log("mod Broke heres why: " + e);
-            }
-            Log($"{MOD_NAME} v{VERSION} started successfully.", TEXT_COLOR);
-        }
+			catch (Exception e)
+			{
+				AdvancedLogging.Log("mod Broke heres why: " + e, Color.red, true);
+			}
+			AdvancedLogging.Log($"{MOD_NAME} v{VERSION} started successfully.", Color.green, false, true);
+		}
 
-        public static void Log(string text, string color="FFFFFF")
-        {
-            ETGModConsole.Log($"<color={color}>{text}</color>");
-        }
+		protected static AutocompletionSettings GiveAutocompletionSettingsEnemy = new AutocompletionSettings(delegate (string input) {
+			List<string> ret = new List<string>();
+			foreach (string key in Game.Enemies.IDs)
+			{
+				if (key.AutocompletionMatch(input.ToLower()))
+				{
+					ret.Add(key.Replace("gungeon:", ""));
+				}
+			}
+			return ret.ToArray();
+		});
+
+		public static void Log(string text, string color = "FFFFFF")
+		{
+			ETGModConsole.Log($"<color={color}>{text}</color>");
+		}
 		public StreamWriter writer;
 
 		public override void Exit() { }
-        public override void Init() { }
+		public override void Init() { }
+
 		public static void LoadRenames()
 		{
+
 			string[] directories = Directory.GetDirectories(RenameDirectory);
 			for (int i = 0; i < directories.Length; i++)
 			{
 				string text = Path.Combine(RenameDirectory, directories[i]);
-				string text2 = Path.Combine(text, namefile) ;
+				string text2 = Path.Combine(text, namefile);
 				string text3 = Path.Combine(text, shortdescfile);
 				string text4 = Path.Combine(text, longdescfile);
 				bool flag = File.Exists(text2);
@@ -186,146 +227,105 @@ namespace RenameMod
 				{
 					ReadNames(text2);
 				}
-					
+
 
 				bool flag2 = File.Exists(text3);
-				if(flag2)
-                {
+				if (flag2)
+				{
 					ReadShortDesc(text3);
 				}
 
 				bool flag3 = File.Exists(text4);
-				if(flag3)
-                {
+				if (flag3)
+				{
 					ReadLongDesc(text4);
-                }
-				
+				}
+
 			}
 		}
 
 		public static void ReadNames(string path)
-        {
-			var res = File.ReadAllLines(path).Select((v, I) => new { Index = I, Value = v }).GroupBy(p => p.Index / 2).ToDictionary(g => g.First().Value, g => g.Last().Value);
-			for (int index = 0; index < res.Count; index++)
+		{
+
+			if (new FileInfo(path).Length > 0)
 			{
-				ETGModConsole.Log($"{res.ElementAt(index).Value}'s name is now: {res.ElementAt(index).Key}");
+				var output = File.ReadAllText(path);
+				JObject o = JObject.Parse(output);
 
-				Gun gun = PickupObjectDatabase.GetByName(res.ElementAt(index).Value) as Gun;
-				var thing = PickupObjectDatabase.GetByName(res.ElementAt(index).Value);
+				foreach (var pair in o)
+				{
+					ETGModConsole.Log($"{pair.Key}'s name is now: {pair.Value}");
 
-				if (thing is Gun && thing != null)
-				{
-					thing.SetName(res.ElementAt(index).Key);
-				}
-				else if (thing != null)
-				{
-					thing.SetName(res.ElementAt(index).Key);
+					Gun gun = PickupObjectDatabase.GetByName(pair.Key.ToString()) as Gun;
+					var thing = PickupObjectDatabase.GetByName(pair.Key.ToString());
+
+					if (thing is Gun && thing != null)
+					{
+						thing.SetName(pair.Value.ToString());
+					}
+					else if (thing != null)
+					{
+						thing.SetName(pair.Value.ToString());
+					}
 				}
 			}
 		}
+
 		public static void ReadShortDesc(string path)
 		{
-			var res = File.ReadAllLines(path).Select((v, I) => new { Index = I, Value = v }).GroupBy(p => p.Index / 2).ToDictionary(g => g.First().Value, g => g.Last().Value);
-			for (int index = 0; index < res.Count; index++)
+			if (new FileInfo(path).Length > 0)
 			{
-				ETGModConsole.Log($"{res.ElementAt(index).Value}'s short description is now: {res.ElementAt(index).Key}");
+				var output = File.ReadAllText(path);
+				JObject o = JObject.Parse(output);
 
-				Gun gun = PickupObjectDatabase.GetByName(res.ElementAt(index).Value) as Gun;
-				var thing = PickupObjectDatabase.GetByName(res.ElementAt(index).Value);
+				foreach (var pair in o)
+				{
+					ETGModConsole.Log($"{pair.Key}'s name is now: {pair.Value}");
 
-				if (thing is Gun && thing != null)
-				{
-					thing.SetShortDescription(res.ElementAt(index).Key);
-				}
-				else if (thing != null)
-				{
-					thing.SetShortDescription(res.ElementAt(index).Key);
+					Gun gun = PickupObjectDatabase.GetByName(pair.Key.ToString()) as Gun;
+					var thing = PickupObjectDatabase.GetByName(pair.Key.ToString());
+
+					if (thing is Gun && thing != null)
+					{
+						thing.SetShortDescription(pair.Value.ToString());
+					}
+					else if (thing != null)
+					{
+						thing.SetShortDescription(pair.Value.ToString());
+					}
 				}
 			}
 		}
 		public static void ReadLongDesc(string path)
 		{
-			var res = File.ReadAllLines(path).Select((v, I) => new { Index = I, Value = v }).GroupBy(p => p.Index / 2).ToDictionary(g => g.First().Value, g => g.Last().Value);
-			for (int index = 0; index < res.Count; index++)
+			if (new FileInfo(path).Length > 0)
 			{
-				ETGModConsole.Log($"{res.ElementAt(index).Value}'s long description is now: {res.ElementAt(index).Key}");
+				var output = File.ReadAllText(path);
+				JObject o = JObject.Parse(output);
 
-				Gun gun = PickupObjectDatabase.GetByName(res.ElementAt(index).Value) as Gun;
-				var thing = PickupObjectDatabase.GetByName(res.ElementAt(index).Value);
+				foreach (var pair in o)
+				{
+					ETGModConsole.Log($"{pair.Key}'s name is now: {pair.Value}");
 
-				if (thing is Gun && thing != null)
-				{
-					thing.SetLongDescription(res.ElementAt(index).Key.CapitalizeFirst());
-				}
-				else if (thing != null)
-				{
-					thing.SetLongDescription(res.ElementAt(index).Key.CapitalizeFirst());
+					Gun gun = PickupObjectDatabase.GetByName(pair.Key.ToString()) as Gun;
+					var thing = PickupObjectDatabase.GetByName(pair.Key.ToString());
+
+					if (thing is Gun && thing != null)
+					{
+						thing.SetLongDescription(pair.Value.ToString());
+					}
+					else if (thing != null)
+					{
+						thing.SetLongDescription(pair.Value.ToString());
+					}
 				}
 			}
 		}
-		private void renameGun(string[] args)
-		{
-			bool flag = !Module.ArgCount(args, 2, 99999);
-			if (!flag)
-			{
-
-				string text = args[0];
-				bool flag3 = !Game.Items.ContainsID(text);
-				if (flag3)
-				{
-					ETGModConsole.Log(string.Format("Invalid item ID {0}!", text), false);
-				}
-				else
-				{
-					ETGModConsole.Log(string.Concat(new object[]
-					{
-						"Attempting to change gun name",
-						args[0],
-						" (numeric ",
-						text,
-						"), class ",
-						Game.Items.Get(text).GetType()
-					}), false);
-
-					bool flag4 = args.Length < 2;
-					if (flag4)
-					{
-						Log("At least 2 arguments required.");
-					}
-					string name = string.Empty;
-					List<string> nameSetter = new List<string>();
-					string[] nameSetter2 = new string[] { };
-					// WHY DO I NEED SO MANY FUCKING NAME SETTERS;
-					IEnumerable<int> words = Enumerable.Range(1, args.Length - 1);
-					foreach (int num in words)
-					{
-						nameSetter.Add(args[num]);
-						nameSetter2 = nameSetter.ToArray();
-					}
-					name = string.Join(" ", nameSetter2);
-					TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-					PickupObject pickupObject = Game.Items[text];
-					Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
-						gun.SetName(name);
-						Log($"{text}'s name is now " + name);
-					ItemNames.Add(pickupObject.name, name);
-
-					using (StreamWriter file = new StreamWriter(NameFilePath, true))
-					{
-							file.WriteLine(name);
-							string itemname = $"{gun}".Split('(')[0];
-							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
-					}
-
-				}
-			}
-		}
+		
 
 		private void RenameItem(string[] args)
 		{
-			bool flag = !Module.ArgCount(args, 2, 99999);
-			if (!flag)
-			{
+
 				string text = args[0];
 				bool flag3 = !Game.Items.ContainsID(text);
 				if (flag3)
@@ -334,15 +334,7 @@ namespace RenameMod
 				}
 				else
 				{
-					ETGModConsole.Log(string.Concat(new object[]
-					{
-							"Attempting to change item name",
-							args[0],
-							" (numeric ",
-							text,
-							"), class ",
-							Game.Items.Get(text).GetType()
-					}), false);
+		
 					bool flag4 = args.Length < 2;
 					if (flag4)
 					{
@@ -362,22 +354,17 @@ namespace RenameMod
 					TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
 					PickupObject pickupObject = Game.Items[text];
 					PickupObject item = PickupObjectDatabase.GetByName(pickupObject.name);
-					item.SetName(name);
-					Log($"{text}'s name is now " + name);
-					using (StreamWriter file = new StreamWriter(NameFilePath, true))
-					{
-							file.WriteLine(name);
-							string itemname = $"{item}".Split('(')[0];
-							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
-					}
+					item.SetName(name.ToTitleCaseInvariant());
+					Log($"{text}'s name is now " + name.ToTitleCaseInvariant());
+					string itemname = $"{item}".Split('(')[0].TrimEnd();
+					if (nameJson[itemname] != null)
+						nameJson.Property(itemname).Remove();
+					nameJson.Add(itemname, name);
+					File.WriteAllText(NameFilePath, nameJson.ToString());
 				}
-			}
 		}
 		private void SetItemShortDesc(string[] args)
 		{
-			bool flag = !Module.ArgCount(args, 2, 99999);
-			if (!flag)
-			{
 
 				string text = args[0];
 				bool flag3 = !Game.Items.ContainsID(text);
@@ -387,15 +374,7 @@ namespace RenameMod
 				}
 				else
 				{
-					ETGModConsole.Log(string.Concat(new object[]
-					{
-							"Attempting to change item short description",
-							args[0],
-							" (numeric ",
-							text,
-							"), class ",
-							Game.Items.Get(text).GetType()
-					}), false);
+
 					bool flag4 = args.Length < 2;
 					if (flag4)
 					{
@@ -412,79 +391,20 @@ namespace RenameMod
 						nameSetter2 = nameSetter.ToArray();
 					}
 					name = string.Join(" ", nameSetter2);
-					TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
 					PickupObject pickupObject = Game.Items[text];
 					PickupObject item = PickupObjectDatabase.GetByName(pickupObject.name);
-					item.SetShortDescription(name);
-					Log($"{text}'s short description is now " + name);
-					using (StreamWriter file = new StreamWriter(ShortDescPath, true))
-					{
-							file.WriteLine(name);
-							string itemname = $"{item}".Split('(')[0];
-							file.WriteLine(itemname.Split('(')[0].Substring(0, itemname.Length - 1));
-					}
+					item.SetShortDescription(name.ToTitleCaseInvariant());
+					Log($"{text}'s short description is now " + name.ToTitleCaseInvariant());
+					string itemname = $"{item}".Split('(')[0].TrimEnd();
+					if (ShortDescJson[itemname] != null)
+						ShortDescJson.Property(itemname).Remove();
+					ShortDescJson.Add(itemname, name);
+					File.WriteAllText(ShortDescPath, ShortDescJson.ToString());
 				}
-			}
 		}
-		private void SetGunShortDesc(string[] args)
-		{
-			bool flag = !Module.ArgCount(args, 2, 99999);
-			if (!flag)
-			{
 
-				string text = args[0];
-				bool flag3 = !Game.Items.ContainsID(text);
-				if (flag3)
-				{
-					ETGModConsole.Log(string.Format("Invalid item ID {0}!", text), false);
-				}
-				else
-				{
-					ETGModConsole.Log(string.Concat(new object[]
-					{
-							"Attempting to change gun short description",
-							args[0],
-							" (numeric ",
-							text,
-							"), class ",
-							Game.Items.Get(text).GetType()
-					}), false);
-					bool flag4 = args.Length < 2;
-					if (flag4)
-					{
-						Log("At least 2 arguments required.");
-					}
-					string name = string.Empty;
-					List<string> nameSetter = new List<string>();
-					string[] nameSetter2 = new string[] { };
-					// WHY DO I NEED SO MANY FUCKING NAME SETTERS;
-					IEnumerable<int> words = Enumerable.Range(1, args.Length - 1);
-					foreach (int num in words)
-					{
-						nameSetter.Add(args[num]);
-						nameSetter2 = nameSetter.ToArray();
-					}
-					name = string.Join(" ", nameSetter2);
-					TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-					PickupObject pickupObject = Game.Items[text];
-					Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
-						gun.SetShortDescription(name);
-						Log($"{text}'s short description is now " + name);
-					using (StreamWriter file = new StreamWriter(ShortDescPath, true))
-					{
-							file.WriteLine(name);
-							string itemname = $"{gun}".Split('(')[0];
-							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
-					}
-				}
-			}
-		}
 		private void SetItemLongDesc(string[] args)
 		{
-			bool flag = !Module.ArgCount(args, 2, 99999);
-			if (!flag)
-			{
-
 				string text = args[0];
 				bool flag3 = !Game.Items.ContainsID(text);
 				if (flag3)
@@ -493,21 +413,12 @@ namespace RenameMod
 				}
 				else
 				{
-					ETGModConsole.Log(string.Concat(new object[]
-					{
-							"Attempting to change item long description",
-							args[0],
-							" (numeric ",
-							text,
-							"), class ",
-							Game.Items.Get(text).GetType()
-					}), false);
 					bool flag4 = args.Length < 2;
 					if (flag4)
 					{
 						Log("At least 2 arguments required.");
 					}
-					
+
 					string name = string.Empty;
 					List<string> nameSetter = new List<string>();
 					string[] nameSetter2 = new string[] { };
@@ -523,22 +434,16 @@ namespace RenameMod
 					PickupObject item = PickupObjectDatabase.GetByName(pickupObject.name);
 					item.SetLongDescription(name.CapitalizeFirst());
 					Log($"{text}'s long description is now " + name);
-					using (StreamWriter file = new StreamWriter(LongDescPath, true))
-					{
-							file.WriteLine(name);
-							string itemname = $"{item}".Split('(')[0];
-							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
-					}
+					string itemname = $"{item}".Split('(')[0].TrimEnd();
+					if (LongDescJson[itemname] != null)
+						LongDescJson.Property(itemname).Remove();
+					LongDescJson.Add(itemname, name);
+					File.WriteAllText(LongDescPath, LongDescJson.ToString());
 				}
-			}
 		}
 
-		private void SetGunLongDesc(string[] args)
+		private void clearname(string[] args)
 		{
-			bool flag = !Module.ArgCount(args, 2, 99999);
-			if (!flag)
-			{
-
 				string text = args[0];
 				bool flag3 = !Game.Items.ContainsID(text);
 				if (flag3)
@@ -547,102 +452,81 @@ namespace RenameMod
 				}
 				else
 				{
-					ETGModConsole.Log(string.Concat(new object[]
-					{
-							"Attempting to change gun long description",
-							args[0],
-							" (numeric ",
-							text,
-							"), class ",
-							Game.Items.Get(text).GetType()
-					}), false);
-					bool flag4 = args.Length < 2;
+					bool flag4 = args.Length < 1;
 					if (flag4)
 					{
-						Log("At least 2 arguments required.");
+						Log("At least 1 argument required.");
 					}
-
-					string name = string.Empty;
-					List<string> nameSetter = new List<string>();
-					string[] nameSetter2 = new string[] { };
-					// WHY DO I NEED SO MANY FUCKING NAME SETTERS;
-					IEnumerable<int> words = Enumerable.Range(1, args.Length - 1);
-					foreach (int num in words)
-					{
-						nameSetter.Add(args[num]);
-						nameSetter2 = nameSetter.ToArray();
-					}
-					name = string.Join(" ", nameSetter2);
 
 					PickupObject pickupObject = Game.Items[text];
-					    Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
-						gun.SetLongDescription(name.CapitalizeFirst());
-						Log($"{text}'s long description is now " + name);
-					using (StreamWriter file = new StreamWriter(LongDescPath, true))
+					PickupObject item = PickupObjectDatabase.GetByName(pickupObject.name);
+
+					string itemname = $"{item}".Split('(')[0].TrimEnd();
+					if (nameJson[itemname] != null)
 					{
-							file.WriteLine(name);
-							string itemname = $"{gun}".Split('(')[0];
-							file.WriteLine(itemname.Substring(0, itemname.Length - 1));
+						nameJson.Property(itemname).Remove();
 					}
+					File.WriteAllText(NameFilePath, nameJson.ToString());
+					ETGModConsole.Log($"{text}'s name successfully cleared!, restart game for it to take effect.");
 				}
+		}
+		private void clearShortDesc(string[] args)
+		{
+			string text = args[0];
+			bool flag3 = !Game.Items.ContainsID(text);
+			if (flag3)
+			{
+				ETGModConsole.Log(string.Format("Invalid item ID {0}!", text), false);
+			}
+			else
+			{
+				bool flag4 = args.Length < 1;
+				if (flag4)
+				{
+					Log("At least 1 argument required.");
+				}
+
+				PickupObject pickupObject = Game.Items[text];
+				PickupObject item = PickupObjectDatabase.GetByName(pickupObject.name);
+
+				string itemname = $"{item}".Split('(')[0].TrimEnd();
+				if (ShortDescJson[itemname] != null)
+				{
+					ShortDescJson.Property(itemname).Remove();
+				}
+				File.WriteAllText(NameFilePath, nameJson.ToString());
+				ETGModConsole.Log($"{text}'s name successfully cleared!, restart game for it to take effect.");
+			}
+		}
+		private void clearLongDesc(string[] args)
+		{
+			string text = args[0];
+			bool flag3 = !Game.Items.ContainsID(text);
+			if (flag3)
+			{
+				ETGModConsole.Log(string.Format("Invalid item ID {0}!", text), false);
+			}
+			else
+			{
+				bool flag4 = args.Length < 1;
+				if (flag4)
+				{
+					Log("At least 1 argument required.");
+				}
+
+				PickupObject pickupObject = Game.Items[text];
+				PickupObject item = PickupObjectDatabase.GetByName(pickupObject.name);
+
+				string itemname = $"{item}".Split('(')[0].TrimEnd();
+				if (LongDescJson[itemname] != null)
+				{
+					LongDescJson.Property(itemname).Remove();
+				}
+				File.WriteAllText(NameFilePath, nameJson.ToString());
+				ETGModConsole.Log($"{text}'s name successfully cleared!, restart game for it to take effect.");
 			}
 		}
 
-		
-			//private void cleargunname(string[] args)
-	   //{
-			//      bool flag = !Module.ArgCount(args, 2, 99999);
-			//if (!flag)
-			//{
-
-			//	string text = args[0];
-			//	bool flag3 = !Game.Items.ContainsID(text);
-			//	if (flag3)
-			//	{
-			//		ETGModConsole.Log(string.Format("Invalid item ID {0}!", text), false);
-			//	}
-			//	else
-			//	{
-			//		ETGModConsole.Log(string.Concat(new object[]
-			//		{
-			//				"Attempting to remove gun name",
-			//				args[0],
-			//				" (numeric ",
-			//				text,
-			//				"), class ",
-			//				Game.Items.Get(text).GetType()
-			//		}), false);
-			//		bool flag4 = args.Length < 2;
-			//		if (flag4)
-			//		{
-			//			Log("At least 2 arguments required.");
-			//		}
-
-			//		string name = string.Empty;
-			//		List<string> nameSetter = new List<string>();
-			//		string[] nameSetter2 = new string[] { };
-			//		// WHY DO I NEED SO MANY FUCKING NAME SETTERS;
-			//		IEnumerable<int> words = Enumerable.Range(1, args.Length - 1);
-			//		foreach (int num in words)
-			//		{
-			//			nameSetter.Add(args[num]);
-			//			nameSetter2 = nameSetter.ToArray();
-			//		}
-			//		name = string.Join(" ", nameSetter2);
-
-			//		PickupObject pickupObject = Game.Items[text];
-			//		Gun gun = PickupObjectDatabase.GetByName(pickupObject.name) as Gun;
-			//		gun.SetLongDescription(name.CapitalizeFirst());
-			//		Log($"{text}'s long description is now " + name);
-			//		using (StreamWriter file = new StreamWriter(LongDescPath, true))
-			//		{
-			//				file.WriteLine(name);
-			//				string itemname = $"{gun}".Split('(')[0];
-			//				file.WriteLine(itemname.Substring(0, itemname.Length - 1));
-			//		}
-			//	}
-			//}
-		//}
 		public static bool ArgCount(string[] args, int min, int max)
 		{
 			bool flag = args.Length >= min && args.Length <= max;
@@ -663,29 +547,28 @@ namespace RenameMod
 		}
 
 		protected static AutocompletionSettings GiveAutocompletionSettings = new AutocompletionSettings(delegate (string input)
-        {
-            List<string> list = new List<string>();
-            foreach (string text in Game.Items.IDs)
-            {
-                bool flag = text.AutocompletionMatch(input.ToLower());
-                if (flag)
-                {
-                    Console.WriteLine(string.Format("INPUT {0} KEY {1} MATCH!", input, text));
-                    list.Add(text.Replace("gungeon:", ""));
-                }
-                else
-                {
-                    Console.WriteLine(string.Format("INPUT {0} KEY {1} NO MATCH!", input, text));
-                }
-            }
-            return list.ToArray();
-        });
-		
-		private static Action<string[]> NameSet;
-		protected static AutocompletionSettings AutocompletionSettings;
-	}
+		{
+			List<string> list = new List<string>();
+			foreach (string text in Game.Items.IDs)
+			{
+				bool flag = text.AutocompletionMatch(input.ToLower());
+				if (flag)
+				{
+					Console.WriteLine(string.Format("INPUT {0} KEY {1} MATCH!", input, text));
+					list.Add(text.Replace("gungeon:", ""));
+				}
+				else
+				{
+					Console.WriteLine(string.Format("INPUT {0} KEY {1} NO MATCH!", input, text));
+				}
+			}
+			return list.ToArray();
+		});
 
-		public static class StringExtension
+
+		
+	}
+	public static class StringExtension
 	{
 		public static string CapitalizeFirst(this string s)
 		{
@@ -710,6 +593,6 @@ namespace RenameMod
 			return result.ToString();
 		}
 
-		
+
 	}
 }
